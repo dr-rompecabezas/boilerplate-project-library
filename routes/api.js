@@ -1,47 +1,80 @@
-/*
-*
-*
-*       Complete the API routing below
-*       
-*       
-*/
-
 'use strict';
+const e = require('cors');
+const BookModel = require('../models/book.model.js')
 
 module.exports = function (app) {
 
   app.route('/api/books')
-    .get(function (req, res){
-      //response will be array of book objects
-      //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
+    // GET response will be array of book objects
+    // json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
+    .get(function (req, res) {
+
+      BookModel.find((err, docs) => {
+        if (err) return console.log(err)
+
+        res.status(200).send(docs)
+      })
+
     })
-    
-    .post(function (req, res){
-      let title = req.body.title;
-      //response will contain new book object including atleast _id and title
+
+    // POST response will contain new book object including atleast _id and title
+    .post(function (req, res) {
+      const title = req.body.title;
+      const newBook = new BookModel({ title })
+
+      newBook.save().then(doc => {
+        if (!doc || doc.length === 0) {
+          return res.status(500).send(doc)
+        }
+
+        res.status(200).json({
+          _id: doc._id,
+          title: doc.title,
+        })
+      })
+
+        .catch(err => {
+          res.status(500).json(err)
+        })
     })
-    
-    .delete(function(req, res){
-      //if successful response will be 'complete delete successful'
+
+    // DELETE, if successful, response will be 'complete delete successful'
+    .delete(function (req, res) {
+
+      BookModel.deleteMany((err, docs) => {
+        if (!docs) {
+          res.status(200).send('could not complete delete request')
+        } else {
+          res.status(200).send('complete delete successful')
+        }
+      })
+        .catch(err => {
+          res.status(500).json(err)
+        })
+
     });
 
 
 
   app.route('/api/books/:id')
-    .get(function (req, res){
+
+    // GET json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+    .get(function (req, res) {
       let bookid = req.params.id;
-      //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+
     })
-    
-    .post(function(req, res){
+
+    // POST json res format same as .get
+    .post(function (req, res) {
       let bookid = req.params.id;
       let comment = req.body.comment;
-      //json res format same as .get
+
     })
-    
-    .delete(function(req, res){
+
+    // DELETE, if successful, response will be 'delete successful'
+    .delete(function (req, res) {
       let bookid = req.params.id;
-      //if successful response will be 'delete successful'
+
     });
-  
+
 };
